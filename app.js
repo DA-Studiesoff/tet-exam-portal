@@ -11,12 +11,13 @@ window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();
 });
 
-// Helper: Ignores uppercase/lowercase and strips trailing spaces from column headers
+// Helper: Strips hidden BOM characters (\ufeff), non-breaking spaces, and case differences
 function getField(row, ...possibleKeys) {
   for (const key of possibleKeys) {
-    const target = key.toLowerCase().trim();
+    const target = key.toLowerCase().replace(/[\uFEFF\u00A0]/g, '').trim();
     for (const actualKey of Object.keys(row)) {
-      if (actualKey.toLowerCase().trim() === target) {
+      const cleanActual = actualKey.toLowerCase().replace(/[\uFEFF\u00A0]/g, '').trim();
+      if (cleanActual === target) {
         const val = row[actualKey];
         if (val !== undefined && val !== null && val !== "") {
           return val.toString().trim();
@@ -27,18 +28,17 @@ function getField(row, ...possibleKeys) {
   return "";
 }
 
-// Helper: Converts answers (A/B/C/D, 1/2/3/4, or 0/1/2/3) to zero-based index
+// Helper: Converts A/B/C/D or 1/2/3/4 or 0/1/2/3 into zero-based option index
 function parseAnswerIndex(val) {
   if (!val) return 0;
-  const clean = val.toUpperCase().trim();
-  if (clean === "A") return 0;
-  if (clean === "B") return 1;
-  if (clean === "C") return 2;
-  if (clean === "D") return 3;
+  const clean = val.toString().toUpperCase().trim();
+  if (clean === "A" || clean === "OPTION A") return 0;
+  if (clean === "B" || clean === "OPTION B") return 1;
+  if (clean === "C" || clean === "OPTION C") return 2;
+  if (clean === "D" || clean === "OPTION D") return 3;
   
   const parsed = parseInt(clean, 10);
   if (isNaN(parsed)) return 0;
-  // If user entered 1, 2, 3, 4 in sheet instead of 0, 1, 2, 3
   return parsed > 3 ? parsed - 1 : parsed;
 }
 
@@ -52,19 +52,19 @@ function fetchQuestionsFromSheet() {
   Papa.parse(GOOGLE_SHEET_CSV_URL, {
     download: true,
     header: true,
-    skipEmptyLines: true,
+    skipEmptyLines: 'greedy', // Ignores empty or space-filled trailing rows
     complete: function (results) {
       if (!results.data || results.data.length === 0) {
         alert("Google Sheet returned no data.");
         return;
       }
 
-      questions = results.data.map((row, index) => {
+      // Parse raw CSV rows
+      const rawQuestions = results.data.map((row) => {
         const q_en = getField(row, "question_en", "question");
         const q_hi = getField(row, "question_hi", "question_en", "question");
 
         return {
-          id: index,
           subject: getField(row, "subject") || "General",
           question_en: q_en,
           question_hi: q_hi || q_en,
@@ -86,7 +86,11 @@ function fetchQuestionsFromSheet() {
         };
       });
 
-      console.log("Loaded parsed questions:", questions);
+      // Filter out empty ghost rows to keep exactly valid questions (150)
+      questions = rawQuestions.filter(q => q.question_en.length > 0 || q.question_hi.length > 0);
+      questions.forEach((q, idx) => q.id = idx);
+
+      console.log(`Loaded ${questions.length} valid questions.`, questions);
 
       if (startBtn) {
         startBtn.disabled = false;

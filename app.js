@@ -5,18 +5,19 @@ let timerInterval = null;
 let timeRemaining = 3 * 60 * 60; // 3 Hours
 let currentLanguage = "en"; // 'en' or 'hi'
 
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?gid=0&single=true&output=csv";
+// Direct CSV export link generated from your Google Sheet ID
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv";
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();
 });
 
-// Helper: Strips hidden BOM characters (\ufeff), non-breaking spaces, and case differences
+// Helper: Cleans invisible characters, spaces, hyphens, and matches flexible header variations
 function getField(row, ...possibleKeys) {
   for (const key of possibleKeys) {
-    const target = key.toLowerCase().replace(/[\uFEFF\u00A0]/g, '').trim();
+    const target = key.toLowerCase().replace(/[\uFEFF\u00A0_\s-]/g, '').trim();
     for (const actualKey of Object.keys(row)) {
-      const cleanActual = actualKey.toLowerCase().replace(/[\uFEFF\u00A0]/g, '').trim();
+      const cleanActual = actualKey.toLowerCase().replace(/[\uFEFF\u00A0_\s-]/g, '').trim();
       if (cleanActual === target) {
         const val = row[actualKey];
         if (val !== undefined && val !== null && val !== "") {
@@ -28,18 +29,29 @@ function getField(row, ...possibleKeys) {
   return "";
 }
 
-// Helper: Converts A/B/C/D, 1/2/3/4, or 0/1/2/3 into zero-based option index
-function parseAnswerIndex(val) {
+// Helper: Converts A/B/C/D, Option A, 1/2/3/4, 0/1/2/3, or full text into zero-based option index
+function parseAnswerIndex(val, options = []) {
   if (!val) return 0;
   const clean = val.toString().toUpperCase().trim();
-  if (clean === "A" || clean === "OPTION A") return 0;
-  if (clean === "B" || clean === "OPTION B") return 1;
-  if (clean === "C" || clean === "OPTION C") return 2;
-  if (clean === "D" || clean === "OPTION D") return 3;
+  
+  if (clean === "A" || clean === "OPTION A" || clean === "OPTION 1") return 0;
+  if (clean === "B" || clean === "OPTION B" || clean === "OPTION 2") return 1;
+  if (clean === "C" || clean === "OPTION C" || clean === "OPTION 3") return 2;
+  if (clean === "D" || clean === "OPTION D" || clean === "OPTION 4") return 3;
   
   const parsed = parseInt(clean, 10);
-  if (isNaN(parsed)) return 0;
-  return parsed > 3 ? parsed - 1 : parsed;
+  if (!isNaN(parsed) && parsed.toString() === clean) {
+    return parsed > 3 ? parsed - 1 : parsed;
+  }
+
+  // Match full text if the answer column contains the option text itself
+  for (let i = 0; i < options.length; i++) {
+    if (options[i] && options[i].toString().toUpperCase().trim() === clean) {
+      return i;
+    }
+  }
+
+  return 0;
 }
 
 function fetchQuestionsFromSheet() {
@@ -59,52 +71,59 @@ function fetchQuestionsFromSheet() {
         return;
       }
 
-      // Detect if Google sent an HTML sign-in/access-denied page
-      const firstKey = Object.keys(results.data[0] || {})[0] || "";
-      if (firstKey.includes("<!DOCTYPE") || firstKey.includes("<html") || firstKey.includes("google")) {
-        alert("Error: Google Sheet link returned an HTML page instead of raw CSV.\n\nPlease follow Step 1 to set permission to 'Anyone with the link' and publish as 'Comma-separated values (.csv)'.");
-        if (startBtn) startBtn.innerText = "Sheet Permission Error";
+      // Check if Google returned an HTML permission block
+      const detectedHeaders = Object.keys(results.data[0] || {});
+      const firstHeader = detectedHeaders[0] || "";
+      if (firstHeader.includes("<!DOCTYPE") || firstHeader.includes("<html") || firstHeader.includes("google")) {
+        alert("PERMISSION ERROR:\n\nGoogle blocked access to the sheet.\n\nOpen your sheet -> Click 'Share' -> Set general access to 'Anyone with the link can view'.");
+        if (startBtn) startBtn.innerText = "Set Share Permission to Public";
         return;
       }
 
-      // Parse raw CSV rows
+      // Parse CSV rows into question objects
       const rawQuestions = results.data.map((row) => {
-        const q_en = getField(row, "question_en", "question");
-        const q_hi = getField(row, "question_hi", "question_en", "question");
+        const q_en = getField(row, "question_en", "question", "q_en", "q", "question text", "questions", "ques");
+        const q_hi = getField(row, "question_hi", "q_hi", "hindi_question", "question_hindi", "hindi", "question_en", "question");
+
+        const options_en = [
+          getField(row, "optionA_en", "optionA", "option_a", "option1", "opt_a", "opta", "a"),
+          getField(row, "optionB_en", "optionB", "option_b", "option2", "opt_b", "optb", "b"),
+          getField(row, "optionC_en", "optionC", "option_c", "option3", "opt_c", "optc", "c"),
+          getField(row, "optionD_en", "optionD", "option_d", "option4", "opt_d", "optd", "d")
+        ];
+
+        const options_hi = [
+          getField(row, "optionA_hi", "optionA_en", "optionA", "option_a", "option1", "a"),
+          getField(row, "optionB_hi", "optionB_en", "optionB", "option_b", "option2", "b"),
+          getField(row, "optionC_hi", "optionC_en", "optionC", "option_c", "option3", "c"),
+          getField(row, "optionD_hi", "optionD_en", "optionD", "option_d", "option4", "d")
+        ];
+
+        const rawAns = getField(row, "answere", "answer", "ans", "correct_answer", "correct", "right_answer", "right");
 
         return {
-          subject: getField(row, "subject") || "General",
+          subject: getField(row, "subject", "sub", "category", "topic", "section") || "General",
           question_en: q_en,
           question_hi: q_hi || q_en,
-          options_en: [
-            getField(row, "optionA_en", "optionA"),
-            getField(row, "optionB_en", "optionB"),
-            getField(row, "optionC_en", "optionC"),
-            getField(row, "optionD_en", "optionD")
-          ],
-          options_hi: [
-            getField(row, "optionA_hi", "optionA_en", "optionA"),
-            getField(row, "optionB_hi", "optionB_en", "optionB"),
-            getField(row, "optionC_hi", "optionC_en", "optionC"),
-            getField(row, "optionD_hi", "optionD_en", "optionD")
-          ],
-          answer: parseAnswerIndex(getField(row, "answere", "answer")),
-          explanation_en: getField(row, "xplanation_en", "explanation_en", "explanation") || "No explanation provided.",
-          explanation_hi: getField(row, "explanation_hi", "xplanation_en", "explanation_en", "explanation") || "कोई स्पष्टीकरण उपलब्ध नहीं है।"
+          options_en: options_en,
+          options_hi: options_hi,
+          answer: parseAnswerIndex(rawAns, options_en),
+          explanation_en: getField(row, "xplanation_en", "explanation_en", "explanation", "exp", "solution") || "No explanation provided.",
+          explanation_hi: getField(row, "explanation_hi", "xplanation_en", "explanation_en", "explanation", "exp", "solution") || "कोई स्पष्टीकरण उपलब्ध नहीं है।"
         };
       });
 
-      // Filter out empty rows
+      // Filter out blank rows
       questions = rawQuestions.filter(q => q.question_en.length > 0 || q.question_hi.length > 0);
       questions.forEach((q, idx) => q.id = idx);
 
       if (questions.length === 0) {
-        alert("No valid question columns found. Check that row 1 of your sheet contains headers like 'question_en', 'optionA_en', etc.");
-        if (startBtn) startBtn.innerText = "Header Matching Error";
+        alert(`HEADER ERROR:\n\nSheet columns found:\n[ ${detectedHeaders.join(" , ")} ]\n\nEnsure Row 1 in your Google Sheet includes headers like 'question_en', 'optionA', 'optionB', 'optionC', 'optionD', and 'answer'.`);
+        if (startBtn) startBtn.innerText = "Header Mismatch Error";
         return;
       }
 
-      console.log(`Loaded ${questions.length} valid questions.`);
+      console.log(`Successfully loaded ${questions.length} questions.`);
 
       if (startBtn) {
         startBtn.disabled = false;
@@ -112,7 +131,7 @@ function fetchQuestionsFromSheet() {
       }
     },
     error: function (err) {
-      alert("Error fetching Google Sheet CSV. Check console.");
+      alert("Network Error fetching Google Sheet. Make sure 'Anyone with the link' can view.");
       console.error(err);
     }
   });

@@ -278,3 +278,30 @@ button:disabled {
   border-radius: 4px;
   font-size: 0.9rem;
 }
+.set-select-box {
+  text-align: left;
+  margin: 16px 0 24px 0;
+}
+
+.set-select-box label {
+  display: block;
+  font-size: 0.95rem;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.set-select-box select {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+}
+
+.set-select-box select:focus {
+  border-color: #2563eb;
+}

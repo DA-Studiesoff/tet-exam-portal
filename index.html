@@ -19,6 +19,17 @@
     </ul>
     <button id="start-btn" onclick="startExam()">Start Examination</button>
   </div>
+  <!-- Inside <div id="start-screen" class="card"> -->
+<div class="set-select-box">
+  <label for="paper-set-select"><strong>Select Question Paper Set:</strong></label>
+  <select id="paper-set-select" onchange="changePaperSet()">
+    <option value="set1">Mock Paper Set - 1</option>
+    <option value="set2">Mock Paper Set - 2</option>
+    <option value="set3">Mock Paper Set - 3</option>
+  </select>
+</div>
+
+<button id="start-btn" onclick="startExam()">Start Examination</button>
 
   <!-- Screen 2: Live Test Interface -->
   <div id="exam-screen" class="hidden">

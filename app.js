@@ -5,14 +5,23 @@ let timerInterval = null;
 let timeRemaining = 3 * 60 * 60; // 3 Hours
 let currentLanguage = "en"; // 'en' or 'hi'
 
-// Direct CSV export link generated from your Google Sheet ID
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv";
+// Map your Paper Sets to Google Sheet CSV URLs or Tab GIDs
+const PAPER_SETS = {
+  "set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=0",
+  "set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_TAB_2_GID",
+  "set3": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_TAB_3_GID"
+};
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();
 });
 
-// Helper: Cleans invisible characters, spaces, hyphens, and matches flexible header variations
+// Called when the user selects a different set from the dropdown
+function changePaperSet() {
+  userAnswers = {}; // Reset previous answers
+  fetchQuestionsFromSheet();
+}
+
 function getField(row, ...possibleKeys) {
   for (const key of possibleKeys) {
     const target = key.toLowerCase().replace(/[\uFEFF\u00A0_\s-]/g, '').trim();
@@ -29,7 +38,6 @@ function getField(row, ...possibleKeys) {
   return "";
 }
 
-// Helper: Converts A/B/C/D, Option A, 1/2/3/4, 0/1/2/3, or full text into zero-based option index
 function parseAnswerIndex(val, options = []) {
   if (!val) return 0;
   const clean = val.toString().toUpperCase().trim();
@@ -44,7 +52,6 @@ function parseAnswerIndex(val, options = []) {
     return parsed > 3 ? parsed - 1 : parsed;
   }
 
-  // Match full text if the answer column contains the option text itself
   for (let i = 0; i < options.length; i++) {
     if (options[i] && options[i].toString().toUpperCase().trim() === clean) {
       return i;
@@ -56,12 +63,16 @@ function parseAnswerIndex(val, options = []) {
 
 function fetchQuestionsFromSheet() {
   const startBtn = document.getElementById("start-btn");
+  const setDropdown = document.getElementById("paper-set-select");
+  const selectedSet = setDropdown ? setDropdown.value : "set1";
+  const fetchUrl = PAPER_SETS[selectedSet] || PAPER_SETS["set1"];
+
   if (startBtn) {
     startBtn.disabled = true;
-    startBtn.innerText = "Loading Questions...";
+    startBtn.innerText = "Loading Selected Paper Set...";
   }
 
-  Papa.parse(GOOGLE_SHEET_CSV_URL, {
+  Papa.parse(fetchUrl, {
     download: true,
     header: true,
     skipEmptyLines: 'greedy',
@@ -71,16 +82,14 @@ function fetchQuestionsFromSheet() {
         return;
       }
 
-      // Check if Google returned an HTML permission block
       const detectedHeaders = Object.keys(results.data[0] || {});
       const firstHeader = detectedHeaders[0] || "";
       if (firstHeader.includes("<!DOCTYPE") || firstHeader.includes("<html") || firstHeader.includes("google")) {
-        alert("PERMISSION ERROR:\n\nGoogle blocked access to the sheet.\n\nOpen your sheet -> Click 'Share' -> Set general access to 'Anyone with the link can view'.");
-        if (startBtn) startBtn.innerText = "Set Share Permission to Public";
+        alert("PERMISSION ERROR:\n\nGoogle blocked access to the sheet. Make sure 'Anyone with the link' can view.");
+        if (startBtn) startBtn.innerText = "Permission Error";
         return;
       }
 
-      // Parse CSV rows into question objects
       const rawQuestions = results.data.map((row) => {
         const q_en = getField(row, "question_en", "question", "q_en", "q", "question text", "questions", "ques");
         const q_hi = getField(row, "question_hi", "q_hi", "hindi_question", "question_hindi", "hindi", "question_en", "question");
@@ -113,17 +122,14 @@ function fetchQuestionsFromSheet() {
         };
       });
 
-      // Filter out blank rows
       questions = rawQuestions.filter(q => q.question_en.length > 0 || q.question_hi.length > 0);
       questions.forEach((q, idx) => q.id = idx);
 
       if (questions.length === 0) {
-        alert(`HEADER ERROR:\n\nSheet columns found:\n[ ${detectedHeaders.join(" , ")} ]\n\nEnsure Row 1 in your Google Sheet includes headers like 'question_en', 'optionA', 'optionB', 'optionC', 'optionD', and 'answer'.`);
-        if (startBtn) startBtn.innerText = "Header Mismatch Error";
+        alert("Selected set has no valid questions or sheet tab ID (gid) is incorrect.");
+        if (startBtn) startBtn.innerText = "No Questions Found";
         return;
       }
-
-      console.log(`Successfully loaded ${questions.length} questions.`);
 
       if (startBtn) {
         startBtn.disabled = false;
@@ -131,7 +137,7 @@ function fetchQuestionsFromSheet() {
       }
     },
     error: function (err) {
-      alert("Network Error fetching Google Sheet. Make sure 'Anyone with the link' can view.");
+      alert("Network error fetching question set.");
       console.error(err);
     }
   });

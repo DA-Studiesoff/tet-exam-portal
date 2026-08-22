@@ -7,35 +7,40 @@ let currentLanguage = "en"; // 'en' or 'hi'
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?gid=0&single=true&output=csv";
 
-// Backup questions if sheet fetch fails (CORS / offline)
-const FALLBACK_QUESTIONS = [
-  {
-    id: 0,
-    subject: "Child Development & Pedagogy",
-    question_en: "Which of the following is a primary agency of socialization for children?",
-    question_hi: "निम्नलिखित में से कौन सा बच्चों के सामाजिकरण का प्राथमिक कारक है?",
-    options_en: ["School", "Family", "Media", "Government"],
-    options_hi: ["विद्यालय", "परिवार", "मीडिया", "सरकार"],
-    answer: 1,
-    explanation_en: "Family is the primary context where children learn foundational social skills.",
-    explanation_hi: "परिवार वह पहला माध्यम है जहाँ बच्चा बुनियादी सामाजिक कौशल सीखता है।"
-  },
-  {
-    id: 1,
-    subject: "Mathematics",
-    question_en: "What is the perimeter of a rectangle with length 12 cm and breadth 8 cm?",
-    question_hi: "12 सेमी लंबाई और 8 सेमी चौड़ाई वाले आयत का परिमाप क्या है?",
-    options_en: ["40 cm", "96 cm", "20 cm", "48 cm"],
-    options_hi: ["40 सेमी", "96 सेमी", "20 सेमी", "48 सेमी"],
-    answer: 0,
-    explanation_en: "Perimeter = 2 * (12 + 8) = 40 cm.",
-    explanation_hi: "परिमाप = 2 * (12 + 8) = 40 सेमी।"
-  }
-];
-
 window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();
 });
+
+// Helper: Ignores uppercase/lowercase and strips trailing spaces from column headers
+function getField(row, ...possibleKeys) {
+  for (const key of possibleKeys) {
+    const target = key.toLowerCase().trim();
+    for (const actualKey of Object.keys(row)) {
+      if (actualKey.toLowerCase().trim() === target) {
+        const val = row[actualKey];
+        if (val !== undefined && val !== null && val !== "") {
+          return val.toString().trim();
+        }
+      }
+    }
+  }
+  return "";
+}
+
+// Helper: Converts answers (A/B/C/D, 1/2/3/4, or 0/1/2/3) to zero-based index
+function parseAnswerIndex(val) {
+  if (!val) return 0;
+  const clean = val.toUpperCase().trim();
+  if (clean === "A") return 0;
+  if (clean === "B") return 1;
+  if (clean === "C") return 2;
+  if (clean === "D") return 3;
+  
+  const parsed = parseInt(clean, 10);
+  if (isNaN(parsed)) return 0;
+  // If user entered 1, 2, 3, 4 in sheet instead of 0, 1, 2, 3
+  return parsed > 3 ? parsed - 1 : parsed;
+}
 
 function fetchQuestionsFromSheet() {
   const startBtn = document.getElementById("start-btn");
@@ -44,71 +49,60 @@ function fetchQuestionsFromSheet() {
     startBtn.innerText = "Loading Questions...";
   }
 
-  if (typeof Papa === 'undefined') {
-    alert("PapaParse library standard CDN failed to load. Using offline questions.");
-    loadFallbackData();
-    return;
-  }
-
   Papa.parse(GOOGLE_SHEET_CSV_URL, {
     download: true,
     header: true,
     skipEmptyLines: true,
     complete: function (results) {
       if (!results.data || results.data.length === 0) {
-        console.warn("Sheet returned empty data. Loading fallback questions.");
-        loadFallbackData();
+        alert("Google Sheet returned no data.");
         return;
       }
 
-      questions = results.data.map((row, index) => ({
-        id: index,
-        subject: row.subject || "General",
-        question_en: row.question_en || row.question || "",
-        question_hi: row.question_hi || row.question_en || row.question || "",
-        options_en: [
-          row.optionA_en || row.optionA || "",
-          row.optionB_en || row.optionB || "",
-          row.optionC_en || row.optionC || "",
-          row.optionD_en || row.optionD || ""
-        ],
-        options_hi: [
-          row.optionA_hi || row.optionA_en || row.optionA || "",
-          row.optionB_hi || row.optionB_en || row.optionB || "",
-          row.optionC_hi || row.optionC_en || row.optionC || "",
-          row.optionD_hi || row.optionD_en || row.optionD || ""
-        ],
-        answer: parseInt(row.answere !== undefined ? row.answere : row.answer, 10) || 0,
-        explanation_en: row.xplanation_en || row.explanation_en || row.explanation || "No explanation provided.",
-        explanation_hi: row.explanation_hi || row.xplanation_en || row.explanation_en || row.explanation || "कोई स्पष्टीकरण उपलब्ध नहीं है।"
-      }));
+      questions = results.data.map((row, index) => {
+        const q_en = getField(row, "question_en", "question");
+        const q_hi = getField(row, "question_hi", "question_en", "question");
 
-      enableStartButton(`Start Examination (${questions.length} Qs)`);
+        return {
+          id: index,
+          subject: getField(row, "subject") || "General",
+          question_en: q_en,
+          question_hi: q_hi || q_en,
+          options_en: [
+            getField(row, "optionA_en", "optionA"),
+            getField(row, "optionB_en", "optionB"),
+            getField(row, "optionC_en", "optionC"),
+            getField(row, "optionD_en", "optionD")
+          ],
+          options_hi: [
+            getField(row, "optionA_hi", "optionA_en", "optionA"),
+            getField(row, "optionB_hi", "optionB_en", "optionB"),
+            getField(row, "optionC_hi", "optionC_en", "optionC"),
+            getField(row, "optionD_hi", "optionD_en", "optionD")
+          ],
+          answer: parseAnswerIndex(getField(row, "answere", "answer")),
+          explanation_en: getField(row, "xplanation_en", "explanation_en", "explanation") || "No explanation provided.",
+          explanation_hi: getField(row, "explanation_hi", "xplanation_en", "explanation_en", "explanation") || "कोई स्पष्टीकरण उपलब्ध नहीं है।"
+        };
+      });
+
+      console.log("Loaded parsed questions:", questions);
+
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.innerText = `Start Examination (${questions.length} Qs)`;
+      }
     },
     error: function (err) {
-      console.error("CSV Fetch Error:", err);
-      alert("Unable to fetch Google Sheet online due to browser security restrictions. Loading backup questions.");
-      loadFallbackData();
+      alert("Error parsing CSV data. Check console.");
+      console.error(err);
     }
   });
 }
 
-function loadFallbackData() {
-  questions = FALLBACK_QUESTIONS;
-  enableStartButton("Start Examination (Offline Mode)");
-}
-
-function enableStartButton(text) {
-  const startBtn = document.getElementById("start-btn");
-  if (startBtn) {
-    startBtn.disabled = false;
-    startBtn.innerText = text;
-  }
-}
-
 function startExam() {
   if (questions.length === 0) {
-    alert("No questions available. Reload the page.");
+    alert("No questions available. Please check sheet URL.");
     return;
   }
 

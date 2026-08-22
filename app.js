@@ -28,7 +28,7 @@ function getField(row, ...possibleKeys) {
   return "";
 }
 
-// Helper: Converts A/B/C/D or 1/2/3/4 or 0/1/2/3 into zero-based option index
+// Helper: Converts A/B/C/D, 1/2/3/4, or 0/1/2/3 into zero-based option index
 function parseAnswerIndex(val) {
   if (!val) return 0;
   const clean = val.toString().toUpperCase().trim();
@@ -52,10 +52,18 @@ function fetchQuestionsFromSheet() {
   Papa.parse(GOOGLE_SHEET_CSV_URL, {
     download: true,
     header: true,
-    skipEmptyLines: 'greedy', // Ignores empty or space-filled trailing rows
+    skipEmptyLines: 'greedy',
     complete: function (results) {
       if (!results.data || results.data.length === 0) {
         alert("Google Sheet returned no data.");
+        return;
+      }
+
+      // Detect if Google sent an HTML sign-in/access-denied page
+      const firstKey = Object.keys(results.data[0] || {})[0] || "";
+      if (firstKey.includes("<!DOCTYPE") || firstKey.includes("<html") || firstKey.includes("google")) {
+        alert("Error: Google Sheet link returned an HTML page instead of raw CSV.\n\nPlease follow Step 1 to set permission to 'Anyone with the link' and publish as 'Comma-separated values (.csv)'.");
+        if (startBtn) startBtn.innerText = "Sheet Permission Error";
         return;
       }
 
@@ -86,11 +94,17 @@ function fetchQuestionsFromSheet() {
         };
       });
 
-      // Filter out empty ghost rows to keep exactly valid questions (150)
+      // Filter out empty rows
       questions = rawQuestions.filter(q => q.question_en.length > 0 || q.question_hi.length > 0);
       questions.forEach((q, idx) => q.id = idx);
 
-      console.log(`Loaded ${questions.length} valid questions.`, questions);
+      if (questions.length === 0) {
+        alert("No valid question columns found. Check that row 1 of your sheet contains headers like 'question_en', 'optionA_en', etc.");
+        if (startBtn) startBtn.innerText = "Header Matching Error";
+        return;
+      }
+
+      console.log(`Loaded ${questions.length} valid questions.`);
 
       if (startBtn) {
         startBtn.disabled = false;
@@ -98,7 +112,7 @@ function fetchQuestionsFromSheet() {
       }
     },
     error: function (err) {
-      alert("Error parsing CSV data. Check console.");
+      alert("Error fetching Google Sheet CSV. Check console.");
       console.error(err);
     }
   });
@@ -106,7 +120,7 @@ function fetchQuestionsFromSheet() {
 
 function startExam() {
   if (questions.length === 0) {
-    alert("No questions available. Please check sheet URL.");
+    alert("No questions available.");
     return;
   }
 

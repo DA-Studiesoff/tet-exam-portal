@@ -8,8 +8,8 @@ let currentLanguage = "en"; // 'en' or 'hi'
 // Map your Paper Sets to Google Sheet CSV URLs or Tab GIDs
 const PAPER_SETS = {
   "set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=0",
-  "set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_TAB_2_GID",
-  "set3": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_TAB_3_GID"
+  "set2": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?gid=167934922&single=true&output=csv",
+  "set3": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?gid=1837558332&single=true&output=csv"
 };
 
 window.addEventListener("DOMContentLoaded", () => {

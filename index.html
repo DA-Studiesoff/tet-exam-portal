@@ -17,16 +17,18 @@
       <li><strong>Time Allowed:</strong> 3 Hours (180 Minutes)</li>
       <li><strong>Passing Marks:</strong> 90 / 150 (General), 82 / 150 (Reserved)</li>
     </ul>
-    <div class="set-select-box">
-  <label for="paper-set-select"><strong>Select Question Paper Set:</strong></label>
-  <select id="paper-set-select" onchange="changePaperSet()">
-    <option value="set1">Mock Paper Set - 1</option>
-    <option value="set2">Mock Paper Set - 2</option>
-    <option value="set3">Mock Paper Set - 3</option>
-  </select>
-</div>
 
-<button id="start-btn" onclick="startExam()">Start Examination</button>
+    <div class="set-select-box">
+      <label for="paper-set-select"><strong>Select Question Paper Set:</strong></label>
+      <select id="paper-set-select" onchange="changePaperSet()">
+        <option value="set1">Mock Paper Set - 1</option>
+        <option value="set2">Mock Paper Set - 2</option>
+        <option value="set3">Mock Paper Set - 3</option>
+      </select>
+    </div>
+
+    <button id="start-btn" onclick="startExam()">Start Examination</button>
+  </div>
 
   <!-- Screen 2: Live Test Interface -->
   <div id="exam-screen" class="hidden">
@@ -103,7 +105,7 @@
       <button onclick="location.reload()">Attempt New Mock Test</button>
     </div>
   </div>
-  
+
   <!-- Required CDN for PapaParse -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   

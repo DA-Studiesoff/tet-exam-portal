@@ -5,7 +5,7 @@ let timerInterval = null;
 let timeRemaining = 3 * 60 * 60; // 3 Hours
 let currentLanguage = "en"; // 'en' or 'hi'
 
-// Map your Paper Sets to Google Sheet CSV URLs or Tab GIDs
+// Update the GIDs below with your actual Google Sheet Tab IDs
 const PAPER_SETS = {
   "set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=0",
   "set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_TAB_2_GID",
@@ -16,9 +16,8 @@ window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();
 });
 
-// Called when the user selects a different set from the dropdown
 function changePaperSet() {
-  userAnswers = {}; // Reset previous answers
+  userAnswers = {};
   fetchQuestionsFromSheet();
 }
 
@@ -67,6 +66,16 @@ function fetchQuestionsFromSheet() {
   const selectedSet = setDropdown ? setDropdown.value : "set1";
   const fetchUrl = PAPER_SETS[selectedSet] || PAPER_SETS["set1"];
 
+  // Prevent fetch on unconfigured placeholder GIDs
+  if (fetchUrl.includes("YOUR_TAB_")) {
+    alert(`Tab GID Not Configured:\n\nPlease create Tab 2 or 3 in your Google Sheet and replace '${selectedSet}' GID in app.js.`);
+    if (startBtn) {
+      startBtn.disabled = true;
+      startBtn.innerText = "Select Configured Paper Set";
+    }
+    return;
+  }
+
   if (startBtn) {
     startBtn.disabled = true;
     startBtn.innerText = "Loading Selected Paper Set...";
@@ -85,7 +94,7 @@ function fetchQuestionsFromSheet() {
       const detectedHeaders = Object.keys(results.data[0] || {});
       const firstHeader = detectedHeaders[0] || "";
       if (firstHeader.includes("<!DOCTYPE") || firstHeader.includes("<html") || firstHeader.includes("google")) {
-        alert("PERMISSION ERROR:\n\nGoogle blocked access to the sheet. Make sure 'Anyone with the link' can view.");
+        alert("PERMISSION ERROR:\n\nGoogle blocked access to the sheet. Ensure general access is set to 'Anyone with the link can view'.");
         if (startBtn) startBtn.innerText = "Permission Error";
         return;
       }
@@ -126,7 +135,7 @@ function fetchQuestionsFromSheet() {
       questions.forEach((q, idx) => q.id = idx);
 
       if (questions.length === 0) {
-        alert("Selected set has no valid questions or sheet tab ID (gid) is incorrect.");
+        alert("Selected set has no valid questions.");
         if (startBtn) startBtn.innerText = "No Questions Found";
         return;
       }
@@ -137,7 +146,7 @@ function fetchQuestionsFromSheet() {
       }
     },
     error: function (err) {
-      alert("Network error fetching question set.");
+      alert("Network Error fetching sheet. Check tab ID and permission settings.");
       console.error(err);
     }
   });
@@ -158,6 +167,7 @@ function startExam() {
 }
 
 function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeRemaining--;
 

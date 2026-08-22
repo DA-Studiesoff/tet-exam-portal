@@ -5,7 +5,7 @@ let timerInterval = null;
 let timeRemaining = 3 * 60 * 60; // 3 Hours
 let currentLanguage = "en"; // 'en' or 'hi'
 
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTliG-CGQtiEPU7VjoN6Z-HWkc_RzTO8zFBpePg9CMGQE02R6jonewba1oChyvG1n_duTQiPLRV6pIq/pub?gid=0&single=true&output=csv";
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchQuestionsFromSheet();

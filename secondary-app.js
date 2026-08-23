@@ -8,9 +8,9 @@ let currentLanguage = "en";
 // Update the Google Sheet links/GIDs below with your actual Secondary TET Tab IDs
 const PAPER_SETS = {
   // Math & Science Stream
-  "math_sci_set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=0",
-  "math_sci_set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_MATH_SET2_GID",
-  "math_sci_set3": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_MATH_SET3_GID",
+  "math_sci_set1": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6Dt6T3n5kn1eYtSDGnT-CcKdTd_Rs0Ezh6F6WcnQF9VQ2s1KG7pThhaitmk3YNh-peYRl3X_hLiOJ/pub?gid=0&single=true&output=csv",
+  "math_sci_set2": "",
+  "math_sci_set3": "",
 
   // Social Studies Stream
   "social_set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_SOCIAL_SET1_GID",

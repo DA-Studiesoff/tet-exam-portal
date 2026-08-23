@@ -13,13 +13,13 @@ const PAPER_SETS = {
   "math_sci_set3": "",
 
   // Social Studies Stream
-  "social_set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_SOCIAL_SET1_GID",
-  "social_set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_SOCIAL_SET2_GID",
-  "social_set3": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_SOCIAL_SET3_GID",
+  "social_set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=525632663",
+  "social_set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=000",
+  "social_set3": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=000",
 
   // Language Stream
   "lang_set1": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_LANG_SET1_GID",
-  "lang_set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=YOUR_LANG_SET2_GID"
+  "lang_set2": "https://docs.google.com/spreadsheets/d/1CdjBfrnKVQfhnZlZDd0hvefrBw9FDYELqMVLTOuDvps/export?format=csv&gid=000"
 };
 
 window.addEventListener("DOMContentLoaded", () => {

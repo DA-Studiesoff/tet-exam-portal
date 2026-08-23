@@ -86,6 +86,30 @@
   </footer>
 
   <!-- Landing Language Script -->
-  <script src="landing.js"></script>
+  <!-- Inline Language Script -->
+  <script>
+    let currentLandingLang = "en";
+
+    function toggleLandingLanguage() {
+      currentLandingLang = currentLandingLang === "en" ? "hi" : "en";
+      
+      // Update button label
+      const langBtn = document.getElementById("lang-btn");
+      if (langBtn) {
+        langBtn.innerText = currentLandingLang === "en" ? "Hindi / हिंदी" : "English";
+      }
+
+      // Translate all data-en and data-hi elements
+      const translatableElements = document.querySelectorAll("[data-en][data-hi]");
+      
+      translatableElements.forEach((el) => {
+        if (currentLandingLang === "hi") {
+          el.innerText = el.getAttribute("data-hi");
+        } else {
+          el.innerText = el.getAttribute("data-en");
+        }
+      });
+    }
+  </script>
 </body>
 </html>

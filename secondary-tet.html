@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secondary TET Examination Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Screen 1: Welcome Screen -->
+  <div id="start-screen" class="card">
+    <h1>Secondary Teacher Eligibility Test (TET) - Paper II</h1>
+    
+    <h2 style="color: #2563eb; margin-bottom: 16px; font-weight: 700;">Made by-Anubhav Mishra , Samkul - HSS Radhabai</h2>
+    
+    <p>Welcome, Candidate! Select your subject stream and paper set before starting.</p>
+    <ul>
+      <li><strong>Total Questions:</strong> 150 Questions</li>
+      <li><strong>Time Allowed:</strong> 3 Hours (180 Minutes)</li>
+      <li><strong>Passing Marks:</strong> 90 / 150 (General), 82 / 150 (Reserved)</li>
+    </ul>
+
+    <div class="set-select-box">
+      <label for="paper-set-select"><strong>Select Subject Stream & Paper Set:</strong></label>
+      <select id="paper-set-select" onchange="changePaperSet()">
+        <optgroup label="Mathematics & Science Stream">
+          <option value="math_sci_set1">Math & Science - Mock Set 1</option>
+          <option value="math_sci_set2">Math & Science - Mock Set 2</option>
+          <option value="math_sci_set3">Math & Science - Mock Set 3</option>
+        </optgroup>
+        <optgroup label="Social Studies / Arts Stream">
+          <option value="social_set1">Social Studies - Mock Set 1</option>
+          <option value="social_set2">Social Studies - Mock Set 2</option>
+          <option value="social_set3">Social Studies - Mock Set 3</option>
+        </optgroup>
+        <optgroup label="Language Special Stream">
+          <option value="lang_set1">Language Special - Mock Set 1</option>
+          <option value="lang_set2">Language Special - Mock Set 2</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <button id="start-btn" onclick="startExam()">Start Examination</button>
+  </div>
+
+  <!-- Screen 2: Live Test Interface -->
+  <div id="exam-screen" class="hidden">
+    <header class="top-bar">
+      <h2>Secondary TET Paper II</h2>
+      <button id="lang-toggle-btn" onclick="toggleLanguage()">Hindi / हिंदी</button>
+      <div id="timer-box">Time Remaining: <span id="timer">03:00:00</span></div>
+    </header>
+
+    <div class="exam-container">
+      <!-- Main Question Panel -->
+      <main class="question-panel card">
+        <div class="meta-info">
+          <span id="subject-tag" class="badge">Subject</span>
+          <span id="q-counter">Question 1 of 150</span>
+        </div>
+
+        <h3 id="question-text">Loading Question...</h3>
+
+        <div id="options-container" class="options-list">
+          <!-- Options rendered dynamically -->
+        </div>
+
+        <div class="nav-buttons">
+          <button id="prev-btn" onclick="prevQuestion()" disabled>Previous</button>
+          <button id="next-btn" onclick="nextQuestion()">Next</button>
+          <button id="submit-btn" class="danger-btn" onclick="submitExam()">Submit Test</button>
+        </div>
+      </main>
+
+      <!-- Question Palette -->
+      <aside class="palette-panel card">
+        <h3>Question Palette</h3>
+        <div id="palette-grid" class="palette-grid">
+          <!-- Palette buttons rendered dynamically -->
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Screen 3: Result & Analytics Panel -->
+  <div id="result-screen" class="hidden">
+    <div class="card">
+      <h1>Exam Results & Analytics</h1>
+      <div class="score-banner">
+        <h2>Total Score: <span id="total-score">0</span> / 150</h2>
+        <p id="qualification-status" class="status-badge"></p>
+      </div>
+
+      <div class="analytics-grid">
+        <section>
+          <h3>Subject-Wise Performance</h3>
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Score</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="subject-scores-body">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h3>Focus Areas & Review</h3>
+          <div id="mistakes-list" class="mistakes-container">
+            <!-- Review items rendered by JS -->
+          </div>
+        </section>
+      </div>
+      <button onclick="location.reload()">Attempt New Mock Test</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="secondary-app.js"></script>
+</body>
+</html>
